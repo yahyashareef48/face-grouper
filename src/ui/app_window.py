@@ -67,6 +67,21 @@ class ApplicationWindow:
                                     command=self.save_labeled_images, state=tk.DISABLED)
         self.save_button.pack(side=tk.LEFT, pady=5, padx=5)
         
+        # View mode controls
+        self.view_mode_var = tk.StringVar(value="images")
+        
+        # View all images button
+        self.view_images_button = ttk.Button(controls_frame, text="View All Images", 
+                                          command=lambda: self.switch_view("images"),
+                                          state=tk.DISABLED)
+        self.view_images_button.pack(side=tk.LEFT, pady=5, padx=5)
+        
+        # View face groups button
+        self.view_groups_button = ttk.Button(controls_frame, text="View Face Groups", 
+                                          command=lambda: self.switch_view("groups"),
+                                          state=tk.DISABLED)
+        self.view_groups_button.pack(side=tk.LEFT, pady=5, padx=5)
+        
         # Status label
         self.status_var = tk.StringVar()
         self.status_var.set("Please select an image folder to begin")
@@ -86,6 +101,8 @@ class ApplicationWindow:
             # Enable group faces button
             self.group_button.config(state=tk.NORMAL)
             self.save_button.config(state=tk.DISABLED)
+            self.view_images_button.config(state=tk.NORMAL)
+            self.view_groups_button.config(state=tk.DISABLED)
             self.status_var.set(f"Loaded {len(self.current_image_files)} images. Ready to group faces.")
     
     def group_faces(self):
@@ -112,13 +129,38 @@ class ApplicationWindow:
             
             messagebox.showinfo("Face Grouping Results", message)
             
-            # Enable save button
+            # Show grouped faces in the UI
+            self.gallery.display_face_groups(grouped_faces)
+            
+            # Enable buttons
             self.save_button.config(state=tk.NORMAL)
+            self.group_button.config(state=tk.NORMAL)
+            self.view_images_button.config(state=tk.NORMAL)
+            self.view_groups_button.config(state=tk.NORMAL)
             self.status_var.set(f"Completed face grouping. Found {summary['total_people']} unique people.")
+            
+            # Update current view mode
+            self.view_mode_var.set("groups")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred during face grouping: {e}")
             self.status_var.set("Error during face grouping.")
             self.group_button.config(state=tk.NORMAL)
+    
+    def switch_view(self, mode):
+        """Switch between viewing all images and face groups"""
+        if mode == "images":
+            if self.current_folder_path:
+                self.gallery.load_and_display_images(self.current_folder_path)
+                self.status_var.set(f"Displaying all {len(self.current_image_files)} images")
+                self.view_mode_var.set("images")
+        elif mode == "groups":
+            if hasattr(self.face_grouper, 'grouped_faces') and self.face_grouper.grouped_faces:
+                self.gallery.display_face_groups(self.face_grouper.grouped_faces)
+                summary = self.face_grouper.get_summary()
+                self.status_var.set(f"Displaying {summary['total_people']} face groups")
+                self.view_mode_var.set("groups")
+            else:
+                messagebox.showinfo("No Face Groups", "Please group faces first.")
     
     def save_labeled_images(self):
         if not hasattr(self.face_grouper, 'grouped_faces') or not self.face_grouper.grouped_faces:

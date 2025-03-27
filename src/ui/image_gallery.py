@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 # Use absolute import
-from utils.image_processor import get_image_thumbnails
+from utils.image_processor import get_image_thumbnails, get_face_group_thumbnails
 
 class ImageGallery:
     def __init__(self, parent):
@@ -87,4 +87,58 @@ class ImageGallery:
                 
             # Update UI every 20 images to keep it responsive
             if i % 20 == 0:
+                self.parent.update()
+    
+    def display_face_groups(self, grouped_faces):
+        """Display face groups in the gallery"""
+        # Clear previous content
+        for widget in self.images_frame.winfo_children():
+            widget.destroy()
+            
+        # Get thumbnails for each face group
+        from utils.image_processor import get_face_group_thumbnails
+        group_thumbnails = get_face_group_thumbnails(grouped_faces)
+        
+        if not group_thumbnails:
+            ttk.Label(self.images_frame, text="No face groups found").pack(pady=20)
+            return
+            
+        # Add a label showing the count of groups
+        count_label = ttk.Label(self.images_frame, text=f"Displaying {len(group_thumbnails)} face groups")
+        count_label.pack(side=tk.TOP, pady=10)
+        
+        # Create a container for all groups
+        groups_container = ttk.Frame(self.images_frame)
+        groups_container.pack(fill=tk.BOTH, expand=True)
+        
+        # For each face group
+        for i, (person_name, faces) in enumerate(group_thumbnails.items()):
+            # Create a frame for this group
+            group_frame = ttk.LabelFrame(groups_container, text=person_name)
+            group_frame.pack(fill=tk.X, expand=True, padx=10, pady=5, anchor="n")
+            
+            # Display face count
+            count_text = f"{len(faces)} samples shown (out of {len(grouped_faces[person_name])} total)"
+            ttk.Label(group_frame, text=count_text).pack(side=tk.TOP, anchor="w", padx=5)
+            
+            # Create container for face thumbnails
+            faces_frame = ttk.Frame(group_frame)
+            faces_frame.pack(fill=tk.X, padx=5, pady=5)
+            
+            # Display each face in this group
+            for j, (filename, thumbnail) in enumerate(faces):
+                face_frame = ttk.Frame(faces_frame)
+                face_frame.pack(side=tk.LEFT, padx=5, pady=5)
+                
+                # Display face thumbnail
+                face_label = ttk.Label(face_frame, image=thumbnail)
+                face_label.image = thumbnail  # Keep a reference
+                face_label.pack()
+                
+                # Display filename
+                name_label = ttk.Label(face_frame, text=filename[:10] + "..." if len(filename) > 10 else filename)
+                name_label.pack()
+            
+            # Update UI regularly
+            if i % 5 == 0:
                 self.parent.update()
