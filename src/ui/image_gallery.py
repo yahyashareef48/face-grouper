@@ -6,6 +6,7 @@ from utils.image_processor import get_image_thumbnails
 class ImageGallery:
     def __init__(self, parent):
         self.parent = parent
+        self.current_image_files = []
         self.setup_gallery()
         
     def setup_gallery(self):
@@ -43,6 +44,8 @@ class ImageGallery:
             widget.destroy()
             
         # Get image files from the folder
+        from utils.file_handler import get_image_files
+        self.current_image_files = get_image_files(folder_path)
         images_info = get_image_thumbnails(folder_path)
         
         if not images_info:
