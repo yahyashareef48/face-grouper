@@ -35,6 +35,8 @@ pillow==11.1.0
 2. Click "Group Faces" to detect and group faces
 3. Once grouping is complete, click "Save Labeled Images" to save labeled versions of the images
 
+![Application Output](assets/app_output.png)
+
 ## Development
 
 ```
